@@ -167,6 +167,10 @@ function timerStatus(label, t) {
   const elapsed = (now - t.started_ms) / 1000;
   const remaining = (t.deadline_ms - now) / 1000;
   const expired = remaining <= 0;
+  // A running timer counts down whole seconds (…2s, 1s) and only shows 0s once
+  // it has actually expired — so `remaining` and `expired` never contradict.
+  // ceil keeps a not-yet-expired timer at >=1s; expired pins it to 0.
+  const remainingSeconds = expired ? 0 : Math.max(1, Math.ceil(remaining));
   return {
     label,
     duration: humanizeSeconds(t.duration_s),
@@ -174,8 +178,8 @@ function timerStatus(label, t) {
     deadline: new Date(t.deadline_ms).toISOString(),
     elapsed: humanizeSeconds(elapsed),
     elapsed_seconds: Math.round(elapsed),
-    remaining: expired ? '0s' : humanizeSeconds(remaining),
-    remaining_seconds: Math.max(0, Math.round(remaining)),
+    remaining: humanizeSeconds(remainingSeconds),
+    remaining_seconds: remainingSeconds,
     expired,
     status: expired ? 'EXPIRED — stop now' : 'running',
   };
